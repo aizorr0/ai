@@ -1,0 +1,120 @@
+---
+title: Verathos
+description: Use the Verathos OpenAI compatible API with the AI SDK.
+---
+
+# Verathos Provider
+
+[Verathos](https://verathos.ai/) is an OpenAI-compatible inference API for open models, served by independent GPU operators on Bittensor Subnet 96. Validators check that responses were produced with the committed model weights. You can use its Chat Completions endpoint with the AI SDK through the `@ai-sdk/openai-compatible` module.
+
+## Setup
+
+Install the OpenAI Compatible provider:
+
+<InstallPackages packages="@ai-sdk/openai-compatible" />
+
+Create a Verathos API key and set it as a server-side environment variable:
+
+```bash
+export VERATHOS_API_KEY=vrt_sk_your-api-key
+```
+
+API keys are created on the [Verathos account page](https://verathos.ai/account) after signing in with a Bittensor or Base wallet. Requests are billed against prepaid account credits. See the [Verathos quick start](https://verathos.ai/skill.txt) for details.
+
+## Provider Instance
+
+Create a Verathos provider instance with `createOpenAICompatible`:
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+
+const verathos = createOpenAICompatible({
+  name: 'verathos',
+  apiKey: process.env.VERATHOS_API_KEY,
+  baseURL: 'https://api.verathos.ai/v1',
+});
+```
+
+## Language Models
+
+Create a chat model with the `.chatModel()` factory method and a Verathos model ID:
+
+```ts
+const model = verathos.chatModel('qwen3.8-27b');
+```
+
+### Example
+
+Use `generateText` to generate text with the model:
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { generateText } from 'ai';
+
+const verathos = createOpenAICompatible({
+  name: 'verathos',
+  apiKey: process.env.VERATHOS_API_KEY,
+  baseURL: 'https://api.verathos.ai/v1',
+});
+
+const { text } = await generateText({
+  model: verathos.chatModel('qwen3.8-27b'),
+  prompt: 'Explain what an API gateway does in one sentence.',
+});
+
+console.log(text);
+```
+
+Use `streamText` to stream the response:
+
+```ts
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { streamText } from 'ai';
+
+const verathos = createOpenAICompatible({
+  name: 'verathos',
+  apiKey: process.env.VERATHOS_API_KEY,
+  baseURL: 'https://api.verathos.ai/v1',
+});
+
+const result = streamText({
+  model: verathos.chatModel('qwen3.8-27b'),
+  prompt: 'Write a haiku about distributed systems.',
+});
+
+for await (const textPart of result.textStream) {
+  process.stdout.write(textPart);
+}
+```
+
+## Supported Models and Capabilities
+
+This integration uses the Verathos OpenAI-compatible Chat Completions endpoint for text generation. Models accept text chat messages and return text. Available models include:
+
+| Model ID                  | Context window |
+| ------------------------- | -------------- |
+| `qwen3.8-27b`             | 262,144        |
+| `qwen3.6-27b`             | 262,144        |
+| `qwen3.6-35b-a3b`         | 262,144        |
+| `deepseek-v4-flash-0731`  | 312,320        |
+| `glm-5.2`                 | 84,992         |
+| `ornith-1.5-35b`          | 262,144        |
+| `qwen3.6-27b-abliterated` | 262,144        |
+| `qwen3.8-27b-uncensored`  | 262,144        |
+| `kvasir`                  | Varies         |
+
+`kvasir` is a router that selects one of the models above for each request.
+
+<Note>
+  Tool calling is not currently supported by Verathos models. Use the [models
+  endpoint](https://api.verathos.ai/v1/models) to check current model IDs,
+  prices, context windows, and supported parameters, since availability depends
+  on live network supply.
+</Note>
+
+## Resources
+
+- [Verathos quick start](https://verathos.ai/skill.txt)
+- [Verathos documentation](https://verathos.ai/docs)
+- [Verathos API reference](https://github.com/verathos-ai/verathos/blob/main/docs/api.md)
+- [AI SDK OpenAI Compatible provider](/providers/openai-compatible-providers)
